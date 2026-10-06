@@ -1,0 +1,6 @@
+{
+  "name": "ARAF",
+  "description": "ARAF is a captivating word-search puzzle game with 15 categories, Classic and Time modes, bonus words, hints, and offline play.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
