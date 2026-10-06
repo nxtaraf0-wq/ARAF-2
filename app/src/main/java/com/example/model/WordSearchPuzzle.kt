@@ -13,8 +13,12 @@ enum class GameMode(val title: String, val description: String) {
         description = "No time limit. Relax and find all the words at your own pace."
     ),
     TIME_ATTACK(
-        title = "Time Mode",
-        description = "2-Minute countdown! Earn 2x time bonus points for remaining seconds."
+        title = "Time Attack",
+        description = "Speedrun mode! Finish as fast as you can to record your Personal Best time for this category."
+    ),
+    TIME_BLITZ(
+        title = "Countdown Blitz",
+        description = "2-Minute countdown! Race against the clock to earn +timeLeft × 2 bonus points. Red alert when <30s."
     )
 }
 

@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Stars
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -337,24 +338,43 @@ fun GameScreen(
 private fun TimerPill(
     mode: GameMode,
     timeElapsed: Int,
-    timeRemaining: Int
+    timeRemaining: Int,
+    bestTime: Int? = null
 ) {
-    val isTimeMode = mode == GameMode.TIME_ATTACK
-    val isCritical = isTimeMode && timeRemaining < 30
+    val isBlitz = mode == GameMode.TIME_BLITZ
+    val isTimeAttack = mode == GameMode.TIME_ATTACK
+    val isCritical = isBlitz && timeRemaining < 30
 
     // Specified colors: When <30s remaining, red pill bg-red-500/30, text-red-300
-    val bgColor = if (isCritical) Color(0xFFFFCDD2) else Color.White
-    val textColor = if (isCritical) Color(0xFFD32F2F) else ArafDarkText
-    val borderColor = if (isCritical) Color(0xFFE53935) else Color(0xFFE2E4E9)
+    val bgColor = when {
+        isCritical -> Color(0xFFFFCDD2)
+        isTimeAttack -> Color(0xFFFFF8E1)
+        else -> Color.White
+    }
+    val textColor = when {
+        isCritical -> Color(0xFFD32F2F)
+        isTimeAttack -> Color(0xFFE65100)
+        else -> ArafDarkText
+    }
+    val borderColor = when {
+        isCritical -> Color(0xFFE53935)
+        isTimeAttack -> Color(0xFFFFB74D)
+        else -> Color(0xFFE2E4E9)
+    }
 
-    val minutes = if (isTimeMode) timeRemaining / 60 else timeElapsed / 60
-    val seconds = if (isTimeMode) timeRemaining % 60 else timeElapsed % 60
+    val minutes = if (isBlitz) timeRemaining / 60 else timeElapsed / 60
+    val seconds = if (isBlitz) timeRemaining % 60 else timeElapsed % 60
     val timeStr = "%d:%02d".format(minutes, seconds)
+
+    val icon = when {
+        isTimeAttack -> Icons.Default.Timer
+        else -> Icons.Default.HourglassTop
+    }
 
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = bgColor,
-        shadowElevation = if (isCritical) 3.dp else 1.dp,
+        shadowElevation = if (isCritical || isTimeAttack) 2.dp else 1.dp,
         border = androidx.compose.foundation.BorderStroke(1.dp, borderColor)
     ) {
         Row(
@@ -362,7 +382,7 @@ private fun TimerPill(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.HourglassTop,
+                imageVector = icon,
                 contentDescription = "Timer",
                 tint = textColor,
                 modifier = Modifier.size(16.dp)
@@ -374,6 +394,15 @@ private fun TimerPill(
                 fontWeight = FontWeight.Bold,
                 color = textColor
             )
+            if (isTimeAttack && bestTime != null) {
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "PB %d:%02d".format(bestTime / 60, bestTime % 60),
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFFB78103)
+                )
+            }
         }
     }
 }

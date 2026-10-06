@@ -70,4 +70,29 @@ class GamePreferences(context: Context) {
             highScore = score
         }
     }
+
+    fun getBestTime(categoryId: String): Int? {
+        val time = prefs.getInt("best_time_$categoryId", -1)
+        return if (time > 0) time else null
+    }
+
+    fun saveBestTimeIfRecord(categoryId: String, timeSeconds: Int): Boolean {
+        if (timeSeconds <= 0) return false
+        val existing = getBestTime(categoryId)
+        if (existing == null || timeSeconds < existing) {
+            prefs.edit().putInt("best_time_$categoryId", timeSeconds).apply()
+            return true
+        }
+        return false
+    }
+
+    fun getAllBestTimes(): Map<String, Int> {
+        val map = mutableMapOf<String, Int>()
+        for ((key, value) in prefs.all) {
+            if (key.startsWith("best_time_") && value is Int && value > 0) {
+                map[key.removePrefix("best_time_")] = value
+            }
+        }
+        return map
+    }
 }

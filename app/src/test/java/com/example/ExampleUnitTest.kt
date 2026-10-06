@@ -74,4 +74,11 @@ class ExampleUnitTest {
         assertFalse(BonusWordDictionary.isBonusWord("NO", puzzleWords))
         assertFalse(BonusWordDictionary.isBonusWord("A", puzzleWords))
     }
+
+    @Test
+    fun testTimeAttackModeProperties() {
+        val timeAttack = com.example.model.GameMode.TIME_ATTACK
+        assertEquals("Time Attack", timeAttack.title)
+        assertTrue(timeAttack.description.contains("Personal Best"))
+    }
 }

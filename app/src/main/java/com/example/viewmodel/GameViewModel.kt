@@ -54,6 +54,10 @@ data class GameUiState(
     val isGameOver: Boolean = false,
     val earnedCoinsThisRound: Int = 0,
     val timeBonus: Int = 0,
+    val isNewPersonalBest: Boolean = false,
+    val previousBestTime: Int? = null,
+    val currentCategoryBestTime: Int? = null,
+    val categoryBestTimes: Map<String, Int> = emptyMap(),
     val soundEnabled: Boolean = true,
     val toastMessage: String? = null
 )
@@ -68,7 +72,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         GameUiState(
             coins = prefs.coins,
             completedLevels = prefs.completedLevels,
-            soundEnabled = prefs.soundEnabled
+            soundEnabled = prefs.soundEnabled,
+            categoryBestTimes = prefs.getAllBestTimes(),
+            currentCategoryBestTime = prefs.getBestTime(GameCategories.ALL[0].id)
         )
     )
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
@@ -82,7 +88,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
 
     fun navigateTo(screen: Screen) {
         soundManager.play(SoundEvent.BUTTON_TAP)
-        _uiState.update { it.copy(currentScreen = screen) }
+        _uiState.update {
+            it.copy(
+                currentScreen = screen,
+                categoryBestTimes = prefs.getAllBestTimes()
+            )
+        }
     }
 
     fun toggleSound() {
@@ -98,6 +109,8 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update {
             it.copy(
                 selectedCategory = category,
+                currentCategoryBestTime = prefs.getBestTime(category.id),
+                categoryBestTimes = prefs.getAllBestTimes(),
                 currentScreen = Screen.MODE_SELECT
             )
         }
@@ -107,6 +120,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
         soundManager.play(SoundEvent.BUTTON_TAP)
         val category = _uiState.value.selectedCategory
         val puzzle = PuzzleGenerator.generatePuzzle(category)
+        val prevBest = prefs.getBestTime(category.id)
 
         timerJob?.cancel()
         _uiState.update {
@@ -124,6 +138,9 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 selectedCells = emptyList(),
                 isLevelCompleted = false,
                 isGameOver = false,
+                isNewPersonalBest = false,
+                previousBestTime = prevBest,
+                currentCategoryBestTime = prevBest,
                 earnedCoinsThisRound = 0,
                 timeBonus = 0,
                 currentScreen = Screen.GAME
@@ -142,7 +159,7 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                     break
                 }
 
-                if (state.selectedMode == GameMode.CLASSIC) {
+                if (state.selectedMode == GameMode.CLASSIC || state.selectedMode == GameMode.TIME_ATTACK) {
                     _uiState.update { it.copy(timeElapsed = it.timeElapsed + 1) }
                 } else {
                     val nextTime = state.timeRemaining - 1
@@ -247,8 +264,13 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
             if (isComplete) {
                 timerJob?.cancel()
                 val earnedCoins = 50
-                val timeBonus = if (state.selectedMode == GameMode.TIME_ATTACK) state.timeRemaining * 2 else 0
+                val timeBonus = if (state.selectedMode == GameMode.TIME_BLITZ) state.timeRemaining * 2 else 0
                 val finalScore = newScore + timeBonus
+
+                val prevBest = prefs.getBestTime(puzzle.category.id)
+                val isNewRecord = if (state.selectedMode == GameMode.TIME_ATTACK) {
+                    prefs.saveBestTimeIfRecord(puzzle.category.id, state.timeElapsed)
+                } else false
 
                 prefs.addCoins(earnedCoins)
                 prefs.markLevelCompleted(puzzle.category.id)
@@ -256,6 +278,12 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                 prefs.incrementGamesPlayed()
 
                 soundManager.play(SoundEvent.LEVEL_COMPLETE)
+
+                if (isNewRecord) {
+                    val m = state.timeElapsed / 60
+                    val s = state.timeElapsed % 60
+                    showToast("🏆 NEW RECORD: %d:%02d!".format(m, s))
+                }
 
                 _uiState.update {
                     it.copy(
@@ -266,6 +294,10 @@ class GameViewModel(application: Application) : AndroidViewModel(application) {
                         coins = prefs.coins,
                         completedLevels = prefs.completedLevels,
                         isLevelCompleted = true,
+                        isNewPersonalBest = isNewRecord,
+                        previousBestTime = prevBest,
+                        currentCategoryBestTime = prefs.getBestTime(puzzle.category.id),
+                        categoryBestTimes = prefs.getAllBestTimes(),
                         selectedCells = emptyList(),
                         currentScreen = Screen.RESULTS
                     )

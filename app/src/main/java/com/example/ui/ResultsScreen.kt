@@ -25,11 +25,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.HourglassDisabled
 import androidx.compose.material.icons.filled.MonetizationOn
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -186,6 +188,58 @@ fun ResultsScreen(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
+                    // Personal Best Trophy Banner
+                    if (uiState.isNewPersonalBest) {
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color(0xFFFFF8E1),
+                            border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFFFFB300)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 12.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(vertical = 10.dp, horizontal = 14.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.EmojiEvents,
+                                        contentDescription = null,
+                                        tint = Color(0xFFFFA000),
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "NEW PERSONAL BEST!",
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Black,
+                                        color = Color(0xFFB78103)
+                                    )
+                                }
+                                val m = uiState.timeElapsed / 60
+                                val s = uiState.timeElapsed % 60
+                                Text(
+                                    text = "Record Time: %d:%02d".format(m, s),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF795548),
+                                    modifier = Modifier.padding(top = 2.dp)
+                                )
+                                if (uiState.previousBestTime != null) {
+                                    val pm = uiState.previousBestTime / 60
+                                    val ps = uiState.previousBestTime % 60
+                                    val diff = uiState.previousBestTime - uiState.timeElapsed
+                                    Text(
+                                        text = "Previous: %d:%02d (-%ds faster!)".format(pm, ps, diff),
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF8D6E63)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     // Coins Reward banner
                     if (isVictory) {
                         Surface(
@@ -224,6 +278,20 @@ fun ResultsScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         ScoreRow(
+                            label = "Time Taken",
+                            pts = "%d:%02d".format(uiState.timeElapsed / 60, uiState.timeElapsed % 60)
+                        )
+
+                        if (uiState.selectedMode == GameMode.TIME_ATTACK) {
+                            val best = uiState.currentCategoryBestTime ?: uiState.timeElapsed
+                            ScoreRow(
+                                label = "Category PB",
+                                pts = "%d:%02d".format(best / 60, best % 60),
+                                isBonus = uiState.isNewPersonalBest
+                            )
+                        }
+
+                        ScoreRow(
                             label = "Words Found (${uiState.foundWords.size})",
                             pts = "+${uiState.foundWords.size * 10} pts"
                         )
@@ -236,7 +304,7 @@ fun ResultsScreen(
                             )
                         }
 
-                        if (uiState.selectedMode == GameMode.TIME_ATTACK && uiState.timeBonus > 0) {
+                        if (uiState.selectedMode == GameMode.TIME_BLITZ && uiState.timeBonus > 0) {
                             ScoreRow(
                                 label = "Time Bonus (${uiState.timeRemaining}s left)",
                                 pts = "+${uiState.timeBonus} pts",

@@ -98,11 +98,13 @@ fun CategorySelectScreen(
             items(GameCategories.ALL) { category ->
                 val isUnlocked = isCategoryUnlocked(category.index, uiState.completedLevels)
                 val isCompleted = uiState.completedLevels.contains(category.id)
+                val bestTime = uiState.categoryBestTimes[category.id]
 
                 CategoryCard(
                     category = category,
                     isUnlocked = isUnlocked,
                     isCompleted = isCompleted,
+                    bestTime = bestTime,
                     onClick = {
                         if (isUnlocked) {
                             onCategorySelected(category)
@@ -126,12 +128,13 @@ private fun CategoryCard(
     category: Category,
     isUnlocked: Boolean,
     isCompleted: Boolean,
+    bestTime: Int?,
     onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(115.dp)
+            .height(124.dp)
             .clip(RoundedCornerShape(18.dp))
             .border(
                 1.dp,
@@ -197,11 +200,34 @@ private fun CategoryCard(
                         fontWeight = FontWeight.Bold,
                         color = if (isUnlocked) ArafDarkText else Color.Gray
                     )
-                    Text(
-                        text = "${category.words.size} words",
-                        fontSize = 11.sp,
-                        color = if (isUnlocked) Color(0xFF6B7280) else Color.LightGray
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${category.words.size} words",
+                            fontSize = 11.sp,
+                            color = if (isUnlocked) Color(0xFF6B7280) else Color.LightGray
+                        )
+                        if (bestTime != null && isUnlocked) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color(0xFFFFF3E0),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFB74D))
+                            ) {
+                                Text(
+                                    text = "⚡ %d:%02d".format(bestTime / 60, bestTime % 60),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFE65100),
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

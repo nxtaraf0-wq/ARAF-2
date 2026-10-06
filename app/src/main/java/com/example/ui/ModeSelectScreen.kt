@@ -17,11 +17,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.HourglassBottom
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Spa
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -120,13 +122,26 @@ fun ModeSelectScreen(
 
         // Mode Options
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
+            val pbTime = uiState.currentCategoryBestTime
+            val pbLabel = if (pbTime != null) "🏆 Personal Best: %d:%02d".format(pbTime / 60, pbTime % 60) else "⚡ No PB record yet — set one now!"
+
+            ModeCard(
+                title = "Time Attack",
+                subtitle = "Speedrun • Records your fastest time",
+                description = "Complete the puzzle as quickly as possible. Saves your personal best for ${uiState.selectedCategory.name}.\n$pbLabel",
+                icon = Icons.Default.Timer,
+                iconColor = ArafOrange,
+                isSelected = selectedMode == GameMode.TIME_ATTACK,
+                onSelect = { selectedMode = GameMode.TIME_ATTACK }
+            )
+
             ModeCard(
                 title = "Classic Mode",
-                subtitle = "Relaxed pace • Timer counts UP from 0:00",
-                description = "No time pressure. Explore and find every word, search for bonus words, and enjoy the puzzle.",
+                subtitle = "Casual & Relaxed • Untimed",
+                description = "No timer pressure. Explore and find every word, search for bonus words, and enjoy the puzzle.",
                 icon = Icons.Default.Spa,
                 iconColor = Color(0xFF4CAF50),
                 isSelected = selectedMode == GameMode.CLASSIC,
@@ -134,13 +149,13 @@ fun ModeSelectScreen(
             )
 
             ModeCard(
-                title = "Time Mode",
-                subtitle = "2-Minute Blitz • Timer counts DOWN from 2:00",
+                title = "Countdown Blitz",
+                subtitle = "2-Minute Countdown • Timer counts down",
                 description = "Race against the clock! Red warning when <30s remaining. Earn +timeLeft × 2 bonus points!",
                 icon = Icons.Default.HourglassBottom,
-                iconColor = ArafOrange,
-                isSelected = selectedMode == GameMode.TIME_ATTACK,
-                onSelect = { selectedMode = GameMode.TIME_ATTACK }
+                iconColor = ArafPink,
+                isSelected = selectedMode == GameMode.TIME_BLITZ,
+                onSelect = { selectedMode = GameMode.TIME_BLITZ }
             )
         }
 
